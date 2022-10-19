@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import { ImageGalleryItem } from 'components/ImageGalleryItem/ImageGalleryItem';
 import { ImageGalleryList } from './ImageGallery.styled';
 
-export const ImageGallery = ({ items, onShowLargeImg }) => {
+export const ImageGallery = ({ items }) => {
   return (
     <ImageGalleryList>
       {items.map(({ id, webformatURL, largeImageURL }) => {
@@ -12,7 +12,6 @@ export const ImageGallery = ({ items, onShowLargeImg }) => {
             preview={webformatURL}
             alt={largeImageURL}
             url={largeImageURL}
-            onShowLargeImg={onShowLargeImg}
           />
         );
       })}
@@ -22,5 +21,4 @@ export const ImageGallery = ({ items, onShowLargeImg }) => {
 
 ImageGallery.propTypes = {
   items: PropTypes.array.isRequired,
-  onShowLargeImg: PropTypes.func.isRequired,
 };

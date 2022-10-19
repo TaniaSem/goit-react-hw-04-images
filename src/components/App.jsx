@@ -1,93 +1,51 @@
-import { Component } from "react";
 import * as API from '../API/Api';
 import { Button } from "./Button/Button";
 import { Searchbar } from "./Searchbar/Searchbar";
 import { ImageGallery } from "./ImageGallery/ImageGallery";
 import { Box } from "./Box.styled";
 import { Loader } from "./Loader/Loader";
-import { Modal } from "./Modal/Modal";
+import { useState, useEffect } from "react";
 
-export class App extends Component {
-  state = {
-    page: 1,
-    pages: 0,
-    query: '',
-    items: [],
-    isLoading: false,
-    showModal: false,
-  }
+export const App = () => {
+  const [page, setPage] = useState(1);
+  const [query, setQuery] = useState('');
+  const [items, setItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  handleSearchSubmit = (search) => {
+  const handleSearchSubmit = (search) => {
     console.log(search.searchKey);
-    this.setState({
-      page: 1,
-      query: search.searchKey,
-      items: [],
-    })
+    setPage(1);
+    setQuery(search.searchKey);
+    setItems([])
   }
 
-  loadMore = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1
-    }))
-  }
-
-  toggleModal = imgData => {
-    console.log(imgData);
-    this.setState(({ showModal }) => ({
-      showModal: !showModal,
-      imgData,
-    }));
-  };
-
-
-  async componentDidUpdate(_, prevState) {
-    const { page, query } = this.state;
-    if (prevState.page !== page || prevState.query !== query) {
-      API.params.q = query;
-      API.params.page = query !== prevState.query ? 1 : page;
-      try {
-        this.setState({ isLoading: true });
-        const data = await API.getData(API.params);
-        const { total, hits } = data;
-        console.log(hits);
-
-        if (query !== prevState.query) {
-          this.setState({
-            items: hits,
-            total: total,
-            pages: Math.ceil(total / API.params.per_page),
-            isLoading: false,
-          });
-        } else {
-          this.setState(prevState => ({
-            items: [...prevState.items, ...hits],
-            page: API.params.page,
-            isLoading: false,
-          }));
-        }
-      } catch (error) {
-        console.log(error);
-      } finally {
-        this.setState({ isLoading: false });
-      }
+  useEffect(() => {
+    if (query === '') {
+      return;
     }
+    async function getImages() {
+      try {
+        setIsLoading(true);
+        const {hits} = await API.getData(query, page)
+        setItems(prevState => [...prevState, ...hits])
+      } catch (error) {
+        alert('Something went wrong. Try again');
+      } finally {setIsLoading(false)}
+    }
+    getImages()
+  }, [query, page])
+
+  const loadMore = () => {
+    setPage(prevState => prevState + 1)
   }
 
-  render() {
-    const { items, isLoading, showModal, imgData, page, pages } = this.state;
-    return (
+   return (
       <Box>
-        <Searchbar onSubmit={this.handleSearchSubmit} />
+        <Searchbar onSubmit={handleSearchSubmit} />
         {isLoading && <Loader />}
-        {items.length > 0 && <ImageGallery items={items} onShowLargeImg={this.toggleModal} />}
-        {showModal && (
-          <Modal data={imgData} onClose={this.toggleModal}>
-            {/* <img alt={imgData.alt} src={imgData.url} /> */}
-          </Modal>
-        )}
-        {items.length > 0 && page < pages && (<Button onLoadMore={this.loadMore} />)}
+        {items.length > 0 && <ImageGallery items={items} />}
+        
+        {items.length > 0 && (<Button onLoadMore={loadMore} />)}
       </Box>
     );
-  }
-};
+}
