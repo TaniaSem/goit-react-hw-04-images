@@ -1,0 +1,49 @@
+import { Component } from 'react';
+import { createPortal } from 'react-dom';
+import PropTypes from 'prop-types';
+import { ModalBackdrop, ModalContent } from './Modal.styled';
+
+const modalRoot = document.querySelector('#modal-root');
+
+export class Modal extends Component {
+  componentDidMount() {
+    window.addEventListener('keydown', this.handelKeyDown);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('keydown', this.handelKeyDown);
+  }
+
+  handelKeyDown = e => {
+    if (e.code === 'Escape') {
+      this.props.onClose();
+    }
+  };
+
+  handleBackdropClick = event => {
+    if (event.currentTarget === event.target) {
+      this.props.onClose();
+    }
+  };
+
+  render() {
+    return createPortal(
+      <ModalBackdrop onClick={this.handleBackdropClick}>
+        <ModalContent>
+          <img
+            src={this.props.data.url}
+            alt={this.props.data.alt}
+            width="900"
+          />
+        </ModalContent>
+      </ModalBackdrop>,
+      modalRoot
+    );
+  }
+}
+
+Modal.propTypes = {
+  img: PropTypes.string,
+  alt: PropTypes.string,
+  onClick: PropTypes.func,
+};
